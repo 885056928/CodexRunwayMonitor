@@ -1,0 +1,22 @@
+[Unit]
+Description=Codex Monitor usage heartbeat service
+After=network.target
+
+[Service]
+Type=simple
+User=monitor-usage
+Group=monitor-usage
+WorkingDirectory=/opt/monitor-usage
+EnvironmentFile=/etc/monitor-usage/usage.env
+ExecStart=/usr/bin/dotnet /opt/monitor-usage/Monitor.UsageServer.dll
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

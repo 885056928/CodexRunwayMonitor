@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Monitor.App/Monitor.App.csproj" />
+    <Project Path="src/Monitor.Core/Monitor.Core.csproj" />
+    <Project Path="src/Monitor.UsageServer/Monitor.UsageServer.csproj" />
+    <Project Path="src/Monitor.UsageAdmin/Monitor.UsageAdmin.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Monitor.Tests/Monitor.Tests.csproj" />
+    <Project Path="tests/Monitor.UiSmoke/Monitor.UiSmoke.csproj" />
+    <Project Path="tests/Monitor.UsageServer.Tests/Monitor.UsageServer.Tests.csproj" />
+    <Project Path="tests/Monitor.UsageAdmin.UiSmoke/Monitor.UsageAdmin.UiSmoke.csproj" />
+  </Folder>
+</Solution>

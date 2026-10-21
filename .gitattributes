@@ -1,0 +1,5 @@
+# Linux 部署模板固定为 LF，避免 Windows 检出时引入回车。
+deploy/usage/*.service text eol=lf
+deploy/usage/nginx.conf.example text eol=lf
+deploy/usage/usage.env.example text eol=lf
+*.cmd text eol=crlf

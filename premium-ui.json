@@ -1,0 +1,11 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["src/Monitor.App", "src/Monitor.UsageAdmin"],
+  "locale": "zh-CN",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": ["Form", "Scrollbar", "Toast", "Date"],
+  "ownership": { "Date": "typed" },
+  "requiredCommands": ["unit", "e2e"],
+  "commands": { "unit": "dotnet run --project tests/Monitor.Tests -c Release", "e2e": "dotnet run --project tests/Monitor.UiSmoke -c Release" },
+  "evidence": { "failurePaths": "tests/Monitor.UiSmoke/Program.cs" }
+}

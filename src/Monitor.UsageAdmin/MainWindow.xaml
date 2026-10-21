@@ -1,0 +1,152 @@
+<Window x:Class="Monitor.UsageAdmin.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="使用情况统计管理端" Width="1100" Height="760" MinWidth="900" MinHeight="600"
+        Style="{StaticResource {x:Type Window}}"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="使用情况统计" FontSize="26" FontWeight="SemiBold" />
+            <TextBlock Text="在线客户端与不同公网 IP 数均不代表真实人数；同一公网 IP 可有多个客户端。"
+                       Foreground="{DynamicResource MutedBrush}" Margin="0,6,0,0" />
+        </StackPanel>
+
+        <Border Grid.Row="1" Style="{StaticResource Panel}" Padding="16" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="96" />
+                    <ColumnDefinition Width="96" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Label Content="服务器地址(_S)" Target="{Binding ElementName=ServerAddress}" Padding="0,0,0,6" />
+                <TextBox x:Name="ServerAddress" Grid.Row="1" Text="{Binding ServerAddress, UpdateSourceTrigger=PropertyChanged}"
+                         IsEnabled="{Binding CanEditConnection}" AutomationProperties.Name="服务器地址"
+                         ToolTip="公网服务使用 HTTPS，本机联调允许回环 HTTP。" TabIndex="0" />
+                <Label Grid.Column="2" Content="管理密钥(_K)" Target="{Binding ElementName=AdminPassword}" Padding="0,0,0,6" />
+                <PasswordBox x:Name="AdminPassword" Grid.Column="2" Grid.Row="1" Padding="8,6" MinHeight="34"
+                             IsEnabled="{Binding CanEditConnection}" PasswordChanged="OnPasswordChanged" MaxLength="128"
+                             AutomationProperties.Name="管理密钥，仅本次会话使用" TabIndex="1"
+                             ToolTip="仅本次会话使用；断开或退出后清空。" />
+                <Button x:Name="ConnectButton" Grid.Row="1" Grid.Column="4" Content="连接(_C)" Margin="0,0,8,0"
+                        MinHeight="34" Padding="10,4" Command="{Binding ConnectCommand}" IsDefault="True" TabIndex="2" />
+                <Button x:Name="DisconnectButton" Grid.Row="1" Grid.Column="5" Content="断开(_D)" Margin="0"
+                        MinHeight="34" Padding="10,4" Command="{Binding DisconnectCommand}" TabIndex="3" />
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2" Style="{StaticResource Panel}" Padding="16,12" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="160" />
+                    <ColumnDefinition Width="170" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="在线客户端数" Foreground="{DynamicResource MutedBrush}" />
+                    <TextBlock x:Name="OnlineClientsText" Text="{Binding OnlineClients}" FontSize="26" FontWeight="SemiBold" />
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="不同公网 IP 数" Foreground="{DynamicResource MutedBrush}" />
+                    <TextBlock x:Name="OnlineIpsText" Text="{Binding OnlineIps}" FontSize="26" FontWeight="SemiBold" />
+                </StackPanel>
+                <Grid Grid.Column="2" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="最后刷新" Foreground="{DynamicResource MutedBrush}" Margin="0,0,12,6" />
+                    <TextBlock Grid.Column="1" Text="{Binding LastRefresh}" />
+                    <TextBlock Grid.Row="1" Text="服务器时间" Foreground="{DynamicResource MutedBrush}" Margin="0,0,12,0" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ServerTime}" />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="3" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="4,0,0,0" Padding="12,0,0,0" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="{Binding State}" FontWeight="SemiBold" AutomationProperties.LiveSetting="Polite" />
+                <TextBlock x:Name="StatusText" Text="{Binding Status}" Margin="0,4,0,0" MinHeight="40"
+                           AutomationProperties.LiveSetting="Polite">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasError}" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="4" MinHeight="80" Margin="0,0,0,12">
+            <DataGrid x:Name="ClientsGrid" ItemsSource="{Binding Clients}" AutoGenerateColumns="False"
+                      IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False"
+                      CanUserReorderColumns="False" EnableRowVirtualization="True" HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal" RowHeaderWidth="0" SelectionMode="Single" TabIndex="4"
+                      Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource InkBrush}"
+                      BorderBrush="{DynamicResource BorderBrush}" HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
+                      RowHeight="34" ColumnHeaderHeight="36" AutomationProperties.Name="在线客户端列表">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="公网 IP" Binding="{Binding IpAddress}" Width="150" />
+                    <DataGridTextColumn Header="版本" Binding="{Binding Version}" Width="95" />
+                    <DataGridTextColumn Header="随机安装 ID" Binding="{Binding InstallationId}" Width="295" />
+                    <DataGridTextColumn Header="最后心跳（本地时间）" Binding="{Binding LastSeen, StringFormat={}{0:yyyy-MM-dd HH:mm:ss zzz}, Converter={StaticResource LocalTimeConverter}}"
+                                        Width="*" MinWidth="240" />
+                </DataGrid.Columns>
+            </DataGrid>
+            <TextBlock Text="{Binding EmptyMessage}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False" Margin="20,36,20,0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Clients.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Grid>
+
+        <Grid Grid.Row="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="{Binding DataNotice}" Foreground="{DynamicResource MutedBrush}" />
+                <TextBlock Text="管理密钥仅在内存中使用，断开或退出时清空。" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding PageDescription}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <Button x:Name="PreviousPageButton" Content="上一页(_P)" Command="{Binding PreviousPageCommand}" Margin="0,0,8,0" TabIndex="5" />
+                <Button x:Name="NextPageButton" Content="下一页(_N)" Command="{Binding NextPageCommand}" Margin="0,0,8,0" TabIndex="6" />
+                <Button x:Name="RefreshButton" Content="刷新(_R)" Command="{Binding RefreshCommand}" Margin="0" TabIndex="7" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

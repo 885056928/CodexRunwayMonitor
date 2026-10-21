@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>CodexUsageAdmin</AssemblyName>
+    <ApplicationIcon>../Monitor.App/Resources/AppIcon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Monitor.Core/Monitor.Core.csproj" />
+    <Compile Include="../Monitor.App/Commands/RelayCommand.cs" Link="Commands/RelayCommand.cs" />
+    <Compile Include="../Monitor.App/Commands/AsyncRelayCommand.cs" Link="Commands/AsyncRelayCommand.cs" />
+    <Page Include="../Monitor.App/Resources/Theme.xaml" Link="Resources/Theme.xaml" />
+    <Resource Include="../Monitor.App/Resources/AppIcon.ico" Link="Resources/AppIcon.ico" />
+  </ItemGroup>
+</Project>

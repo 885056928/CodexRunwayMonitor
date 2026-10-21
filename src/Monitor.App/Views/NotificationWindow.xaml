@@ -1,0 +1,55 @@
+<Window
+    x:Class="Monitor.App.NotificationWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Codex 额度重置提醒"
+    Width="510"
+    Height="410"
+    ResizeMode="NoResize"
+    ShowInTaskbar="True"
+    Style="{StaticResource {x:Type Window}}"
+    Topmost="True"
+    WindowStartupLocation="Manual">
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock
+                    Margin="0,0,0,16"
+                    FontSize="24"
+                    FontWeight="SemiBold"
+                    Text="Codex 额度重置提醒" />
+                <TextBlock Margin="0,0,0,24" Text="检测到新的 Codex 额度重置完成事件！" />
+                <TextBlock Style="{StaticResource Muted}" Text="实际重置时间" />
+                <TextBlock
+                    x:Name="ResetTime"
+                    Margin="0,0,0,16"
+                    FontSize="19"
+                    FontWeight="SemiBold" />
+                <TextBlock x:Name="AnnouncedTime" Style="{StaticResource Muted}" />
+                <TextBlock Style="{StaticResource Muted}" Text="事件类型：reset_completed" />
+                <TextBlock
+                    x:Name="EventId"
+                    FontFamily="Consolas"
+                    FontSize="12"
+                    Style="{StaticResource Muted}" />
+            </StackPanel>
+        </ScrollViewer>
+        <DockPanel Grid.Row="1" Margin="0,20,0,0">
+            <Button
+                HorizontalAlignment="Right"
+                Click="Dismiss_Click"
+                Content="知道了"
+                DockPanel.Dock="Right"
+                IsDefault="True" />
+            <TextBlock
+                x:Name="CloseHint"
+                VerticalAlignment="Center"
+                Style="{StaticResource Muted}" />
+        </DockPanel>
+    </Grid>
+</Window>
+
