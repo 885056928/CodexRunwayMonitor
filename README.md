@@ -13,7 +13,7 @@
 3. 启动后立即检查。首次有效事件默认只建立基线，因此不弹窗属于正常现象。
 4. 关闭或最小化主窗口后，程序默认继续在系统托盘运行。双击托盘图标恢复窗口；右键选择“退出程序”才能退出。
 
-发布目录是 Windows x64 自包含版本，**无需另装 .NET**。复制时请复制整个 `win-x64` 文件夹，不要只复制 exe。提供 `artifacts/CodexRunwayMonitor-win-x64.zip` 便于转移。默认不开机启动，在“打开设置”中开启后生效；开机启动路径指向当前 exe，移动文件夹后应重新关闭、开启该设置。
+发布目录是 Windows x64 自包含版本，**无需另装 .NET**。复制时请复制整个 `artifacts/usage-client` 文件夹，不要只复制 exe。默认不开机启动，在“打开设置”中开启后生效；开机启动路径指向当前 exe，移动文件夹后应重新关闭、开启该设置。
 
 可用参数：`CodexRunwayMonitor.exe --tray`，启动时只显示托盘。重复启动不会创建第二个监控实例，而会恢复现有主窗口。
 
@@ -123,10 +123,20 @@ dotnet run --project tests/Monitor.UiSmoke -c Release
 dotnet run --project tests/Monitor.Tests -c Release -- --live
 ```
 
-发布自包含版本：
+修改源码后，**双击根目录 `发布最新版客户端.cmd`**，即可重新编译并发布 Windows x64 自包含客户端到 `artifacts/usage-client`。发布需要本机安装 .NET 10 SDK；重新生成 Debug/Release 不会自动更新此目录。
+
+脚本会保留发布目录中现有的 `usage-endpoint.json`（服务器地址和上报接入码）及其他额外文件；首次发布使用源码中的空统计配置。运行中的目标客户端会阻止发布，并提示先从系统托盘退出。编译先在临时目录完成，再替换原目录；编译失败不影响旧版本，替换失败尝试恢复原目录。重复双击会通过发布锁避免同时构建，窗口会停留以便查看成功或错误信息。
+
+命令行执行同一发布流程：
 
 ```powershell
-dotnet publish src/Monitor.App -c Release -r win-x64 --self-contained true -o artifacts/win-x64
+.\tools\publish-client.ps1
+```
+
+发布脚本回归测试（仅使用临时文件和模拟编译器，不启动真实客户端或访问服务器）：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/tests/Test-PublishClient.ps1
 ```
 
 源码：`src/Monitor.Core` 为 API、配置、状态、事件检测、调度和日志；`src/Monitor.App` 为 WPF、托盘和系统集成；`src/Monitor.UsageServer` 为使用统计 API；`src/Monitor.UsageAdmin` 为独立 Windows 管理端；`tests` 为可执行测试。测试证据和未完成的现场验收见 [测试报告](docs/test-results.md)。
@@ -155,6 +165,8 @@ dotnet publish src/Monitor.App -c Release -r win-x64 --self-contained true -o ar
 ```powershell
 .\tools\publish-usage.ps1
 ```
+
+该完整发布脚本复用上述客户端发布流程，同样保留已有的统计配置；日常仅更新普通客户端时直接双击 `发布最新版客户端.cmd`。
 
 - `artifacts/usage-client/CodexRunwayMonitor.exe`：含统计开关的普通客户端，Windows x64 自包含。
 - `artifacts/usage-admin/CodexUsageAdmin.exe`：独立统计管理程序，Windows x64 自包含。
