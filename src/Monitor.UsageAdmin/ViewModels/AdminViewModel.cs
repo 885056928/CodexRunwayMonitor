@@ -11,9 +11,10 @@ namespace Monitor.UsageAdmin;
 
 public sealed class AdminViewModel : INotifyPropertyChanged, IAsyncDisposable
 {
-    public AdminViewModel(HttpClient httpClient)
+    public AdminViewModel(HttpClient httpClient, IStateStore<AdminConnection?>? connectionStore = null)
     {
         client = new UsageAdminClient(httpClient);
+        this.connectionStore = connectionStore;
         ConnectCommand = new AsyncRelayCommand(ExecuteConnectAsync, ReportOperationError, CanConnect);
         DisconnectCommand = new AsyncRelayCommand(DisconnectAsync, ReportOperationError, CanDisconnect);
         RefreshCommand = new AsyncRelayCommand(ExecuteRefreshAsync, ReportOperationError, CanRefresh);
@@ -25,6 +26,7 @@ public sealed class AdminViewModel : INotifyPropertyChanged, IAsyncDisposable
 
     private const int PageSize = 50;
     private readonly UsageAdminClient client;
+    private readonly IStateStore<AdminConnection?>? connectionStore;
     private string serverAddress = "";
     private string adminKey = "";
     private Uri? endpoint;
@@ -35,6 +37,7 @@ public sealed class AdminViewModel : INotifyPropertyChanged, IAsyncDisposable
     private UsageSnapshot? snapshot;
     private bool disconnecting;
     private bool disposed;
+    private bool connectionSaved;
 
     public string ServerAddress
     {
@@ -46,7 +49,7 @@ public sealed class AdminViewModel : INotifyPropertyChanged, IAsyncDisposable
         }
     }
 
-    // 密钥仅在当前进程和 PasswordBox 内保留；断开和退出都由同一清理路径清空。
+    // 本地配置由当前Windows用户加密；断开和退出仍清空当前会话与PasswordBox中的密钥。
     public string AdminKey
     {
         get => adminKey;
@@ -73,6 +76,7 @@ public sealed class AdminViewModel : INotifyPropertyChanged, IAsyncDisposable
     public string PageDescription => $"第 {Page} / {TotalPages} 页 · 每页 {PageSize} 条";
     public string State => IsBusy ? "正在刷新" : !IsConnected ? "未连接" : HasError ? "刷新失败 · 数据已过期" : "已连接 · 每 10 秒刷新";
     public string Status { get; private set; } = "填写服务器地址与管理密钥，然后连接。";
+    public string ConnectionNotice { get; private set; } = "";
     public string DataNotice => snapshot is null ? "暂无快照" : IsStale ? "数据已过期，仅供参考" : "最后一次成功刷新结果";
     public string EmptyMessage => IsBusy ? "正在获取在线客户端…" : !IsConnected ? "连接服务器后显示在线客户端。" : HasError ? "暂时无法获取快照，请检查连接后刷新。" : "当前没有在线客户端。";
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -90,6 +94,27 @@ public sealed class AdminViewModel : INotifyPropertyChanged, IAsyncDisposable
     #endregion
 
     #region 方法
+
+    public async Task LoadConnectionAsync()
+    {
+        if (connectionStore is null) return;
+        try
+        {
+            var connection = await connectionStore.LoadAsync();
+            if (connection is not null)
+            {
+                ServerAddress = connection.ServerAddress;
+                AdminKey = connection.AdminKey;
+                ConnectionNotice = "已载入上次成功连接的信息，点击连接即可使用。";
+            }
+        }
+        catch (Exception)
+        {
+            // 配置恢复失败不影响手动连接，也不展示可能含凭据的异常详情。
+            ConnectionNotice = "本地连接信息读取失败，请重新填写并连接。";
+        }
+        NotifyChanged();
+    }
 
     private bool CanConnect() => CanEditConnection;
     private bool CanDisconnect() => IsConnected && !disconnecting;
@@ -119,6 +144,7 @@ public sealed class AdminViewModel : INotifyPropertyChanged, IAsyncDisposable
             return;
         }
 
+        connectionSaved = false;
         sessionCancellation = new CancellationTokenSource();
         IsConnected = true;
         HasError = false;
@@ -146,6 +172,7 @@ public sealed class AdminViewModel : INotifyPropertyChanged, IAsyncDisposable
         NotifyChanged();
         try
         {
+            var connection = new AdminConnection(ServerAddress, AdminKey);
             var result = await client.GetSnapshotAsync(endpoint!, AdminKey, page, PageSize, cancellationToken);
             var lastPage = Math.Max(1, (result.OnlineClients + PageSize - 1) / PageSize);
             if (page > lastPage)
@@ -161,6 +188,7 @@ public sealed class AdminViewModel : INotifyPropertyChanged, IAsyncDisposable
             IsStale = false;
             HasError = false;
             Status = "快照已更新。在线表示距服务器时间不足 180 秒收到心跳。";
+            await SaveConnectionAsync(connection, cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -175,6 +203,28 @@ public sealed class AdminViewModel : INotifyPropertyChanged, IAsyncDisposable
         {
             IsBusy = false;
             NotifyChanged();
+        }
+    }
+
+    private async Task SaveConnectionAsync(AdminConnection connection, CancellationToken cancellationToken)
+    {
+        if (connectionStore is null || connectionSaved) return;
+        try
+        {
+            // 首次有效快照证明连接可用；不能仅依据会话已启动就覆盖上次成功配置。
+            await connectionStore.SaveAsync(connection, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            connectionSaved = true;
+            ConnectionNotice = "连接信息已保存，下次打开可直接点击连接。";
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            // 本地写入失败与远端查询结果分开显示，保留有效快照，并在下次刷新成功后重试保存。
+            ConnectionNotice = "本地连接信息保存失败，下次打开需重新填写。";
         }
     }
 
@@ -213,7 +263,7 @@ public sealed class AdminViewModel : INotifyPropertyChanged, IAsyncDisposable
         IsStale = true;
         HasError = false;
         AdminKey = "";
-        Status = snapshot is null ? "已断开，管理密钥已清空。" : "已断开，管理密钥已清空；保留的快照已过期。";
+        Status = snapshot is null ? "已断开，当前会话密钥已清空。" : "已断开，当前会话密钥已清空；保留的快照已过期。";
         var cancellation = sessionCancellation;
         sessionCancellation = null;
         cancellation?.Cancel();

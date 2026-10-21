@@ -46,6 +46,7 @@ internal static class Program
     private static async Task RunAsync(string output)
     {
         Directory.CreateDirectory(output);
+        await ConnectionPersistenceTests.RunAsync(output);
         var handler = new SnapshotHandler();
         using var http = new HttpClient(handler);
         await using var viewModel = new AdminViewModel(http);
@@ -161,7 +162,7 @@ internal static class Program
         button.Command!.Execute(button.CommandParameter);
     }
 
-    private static async Task UntilAsync(Func<bool> predicate, int timeoutMilliseconds = 5000)
+    internal static async Task UntilAsync(Func<bool> predicate, int timeoutMilliseconds = 5000)
     {
         using var timeout = new CancellationTokenSource(timeoutMilliseconds);
         while (!predicate())
@@ -171,13 +172,13 @@ internal static class Program
         await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
     }
 
-    private static void Check(bool condition, string message)
+    internal static void Check(bool condition, string message)
     {
         if (!condition) throw new InvalidOperationException(message);
         Console.WriteLine("PASS " + message);
     }
 
-    private static async Task RenderAsync(Window window, string path)
+    internal static async Task RenderAsync(Window window, string path)
     {
         await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
         window.UpdateLayout();
@@ -190,15 +191,17 @@ internal static class Program
         encoder.Save(file);
     }
 
-    private sealed class SnapshotHandler : HttpMessageHandler
+    internal sealed class SnapshotHandler : HttpMessageHandler
     {
         public HttpStatusCode Status { get; set; } = HttpStatusCode.OK;
         public bool Empty { get; set; }
         public string Version { get; set; } = "1.2.3";
         public TaskCompletionSource? HoldNext { get; set; }
+        public int RequestCount { get; private set; }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            RequestCount++;
             // 仅替换网络边界；窗口、命令、HTTP客户端和绑定均执行生产实现。
             if (HoldNext is { } pending)
             {

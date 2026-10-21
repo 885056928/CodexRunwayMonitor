@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net.Http;
 using System.Windows;
 
@@ -8,7 +9,7 @@ public partial class App : Application
     private HttpClient? httpClient;
     private AdminViewModel? viewModel;
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         // 管理密钥只发往用户选择的地址；每次请求的总时限由 Core 统一控制。
@@ -20,7 +21,11 @@ public partial class App : Application
         {
             Timeout = Timeout.InfiniteTimeSpan
         };
-        viewModel = new AdminViewModel(httpClient);
+        var connectionPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "CodexUsageAdmin", "connection.json");
+        viewModel = new AdminViewModel(httpClient, new AdminConnectionStore(connectionPath));
+        // 先恢复表单再创建窗口，不启动连接或自动发送管理请求。
+        await viewModel.LoadConnectionAsync();
         MainWindow = new MainWindow(viewModel);
         MainWindow.Show();
     }

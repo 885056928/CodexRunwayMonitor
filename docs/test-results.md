@@ -1,5 +1,13 @@
 # 验证报告
 
+## 2026-10-22 管理端记住成功连接信息
+
+- Release 全解决方案构建通过，0 警告、0 错误；无新增依赖。新版管理端已自包含发布到 `artifacts/usage-admin`，根目录 `启动统计管理.cmd` 继续使用该版本。
+- 管理端 WPF 及持久化检查 **53/53** 通过，见 `artifacts/admin-persistence-tests.txt`。新增 20 项覆盖真实 Windows 当前用户 DPAPI 加密往返、无明文凭据、重新打开自动填入且无自动请求、鉴权失败和取消不覆盖旧配置、成功成对更新、刷新不重复写盘、读取/保存故障、原文件完整性、保存重试、备份恢复及临时文件清理。
+- 核心 **43/43**、原客户端 WPF **65/65** 通过，见 `artifacts/admin-persistence-core-tests.txt` 和 `artifacts/admin-persistence-client-tests.txt`。本次未修改服务端，未重复运行服务端测试。
+- 已查看自动填入的真实 WPF 截图 `artifacts/usage-admin-ui-smoke/remembered-connection.png`；沿用共享主题、掩码密钥及稳定布局。whitespace 验证通过，C# 语法树规范检查 0 违规，严格界面契约审计 0 错误、0 警告，见 `artifacts/admin-persistence-audit.json`；独立静态审查未发现可操作问题。
+- 本次测试使用临时目录、合成凭据和假 HTTP；没有读取真实管理密钥、连接用户服务器或修改服务器部署。未验证真实用户配置的首次保存，需使用新版管理端成功连接一次后建立加密配置。
+
 ## 2026-10-21 使用统计 API、客户端与管理端
 
 - Release 全解决方案构建通过，0 警告、0 错误；无新增 NuGet 包。三个程序已发布到 `artifacts/usage-client`、`artifacts/usage-admin`、`artifacts/usage-server`，部署模板在 `artifacts/usage-deployment`。两个 Windows 程序为 win-x64 自包含；服务是无平台 apphost 的框架依赖包，Ubuntu 需要 .NET 10 ASP.NET Core 运行时。

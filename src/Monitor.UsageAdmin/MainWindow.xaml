@@ -41,8 +41,8 @@
                 <Label Grid.Column="2" Content="管理密钥(_K)" Target="{Binding ElementName=AdminPassword}" Padding="0,0,0,6" />
                 <PasswordBox x:Name="AdminPassword" Grid.Column="2" Grid.Row="1" Padding="8,6" MinHeight="34"
                              IsEnabled="{Binding CanEditConnection}" PasswordChanged="OnPasswordChanged" MaxLength="128"
-                             AutomationProperties.Name="管理密钥，仅本次会话使用" TabIndex="1"
-                             ToolTip="仅本次会话使用；断开或退出后清空。" />
+                             AutomationProperties.Name="管理密钥，连接成功后本地加密保存" TabIndex="1"
+                             ToolTip="连接成功后由当前 Windows 用户加密保存；下次打开自动填入。" />
                 <Button x:Name="ConnectButton" Grid.Row="1" Grid.Column="4" Content="连接(_C)" Margin="0,0,8,0"
                         MinHeight="34" Padding="10,4" Command="{Binding ConnectCommand}" IsDefault="True" TabIndex="2" />
                 <Button x:Name="DisconnectButton" Grid.Row="1" Grid.Column="5" Content="断开(_D)" Margin="0"
@@ -139,7 +139,9 @@
             </Grid.ColumnDefinitions>
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="{Binding DataNotice}" Foreground="{DynamicResource MutedBrush}" />
-                <TextBlock Text="管理密钥仅在内存中使用，断开或退出时清空。" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
+                <TextBlock Text="{Binding ConnectionNotice}" TextWrapping="Wrap" FontSize="12"
+                           Foreground="{DynamicResource MutedBrush}" AutomationProperties.LiveSetting="Polite" />
+                <TextBlock Text="连接成功后本地加密保存，下次打开自动填入。" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="{Binding PageDescription}" VerticalAlignment="Center" Margin="0,0,12,0" />

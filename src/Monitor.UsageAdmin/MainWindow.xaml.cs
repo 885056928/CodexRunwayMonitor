@@ -13,6 +13,7 @@ public partial class MainWindow : Window
         this.viewModel = viewModel;
         Resources.Add("LocalTimeConverter", new LocalTimeConverter());
         InitializeComponent();
+        AdminPassword.Password = viewModel.AdminKey;
         DataContext = viewModel;
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
         Closing += OnClosing;
@@ -25,14 +26,15 @@ public partial class MainWindow : Window
 
     private void OnPasswordChanged(object sender, RoutedEventArgs e)
     {
-        viewModel.AdminKey = ((PasswordBox)sender).Password;
+        var password = ((PasswordBox)sender).Password;
+        if (viewModel.AdminKey != password) viewModel.AdminKey = password;
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (viewModel.AdminKey.Length == 0 && AdminPassword.Password.Length > 0)
+        if (AdminPassword.Password != viewModel.AdminKey)
         {
-            AdminPassword.Clear();
+            AdminPassword.Password = viewModel.AdminKey;
         }
     }
 

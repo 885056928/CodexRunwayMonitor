@@ -147,7 +147,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/tests/Test-Publish
 
 服务器只在内存保留当前在线状态，定期清除过期记录；重启后随心跳恢复。管理端显示在线客户端数、不同公网 IP 数，以及每个安装的 IP、版本和最后心跳。共享出口可能多人共用 IP，同一人也可能运行多个安装，因此这两个数都不能直接当作真实人数。
 
-本次交付不连接或部署到真实服务器。域名和 HTTPS 准备好后，按 [本地联调与 Ubuntu 部署说明](deploy/usage/README.md) 操作。服务仅监听回环端口，经同机 Nginx HTTPS 对外提供 API；上报接入码与管理密钥必须不同。管理密钥只在管理端当前会话内使用，断开和退出时清空，不能打包到普通客户端。
+本地发布不会自动部署到真实服务器。准备好 HTTPS 后，按 [本地联调与 Ubuntu 部署说明](deploy/usage/README.md) 操作。服务仅监听回环端口，经同机 Nginx HTTPS 对外提供 API；上报接入码与管理密钥必须不同。管理密钥不能打包到普通客户端；独立管理端成功连接后会在当前 Windows 用户目录中加密保存连接信息。
 
 发布者配置普通客户端目录中的 `usage-endpoint.json`，默认两项均为空：
 
@@ -176,6 +176,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/tests/Test-Publish
 分发程序须保留各自完整目录。已有 `artifacts/win-x64` 是此前发布副本，继续保留；此次新版本位于 `usage-client`。开发环境可直接运行 `dotnet run --project src/Monitor.UsageAdmin -c Release`。
 
 根目录 `启动监控.cmd` 已指向此次新客户端；`启动统计管理.cmd` 打开独立管理端。管理端首次显示未连接，填写部署好的地址和管理密钥后才会查询统计。
+
+管理端成功获取首次有效快照后，自动将服务器地址和管理密钥成对保存到 `%LOCALAPPDATA%\CodexUsageAdmin\connection.json`，使用 Windows DPAPI 当前用户加密，不保存明文密钥。下次打开会自动填入地址和掩码密钥，点击“连接”即可，不会自动连接。连接失败或取消不会覆盖上次成功的信息；断开和退出仍清空当前会话密钥，加密文件继续保留。更新发布目录不影响该配置；将程序复制到另一台电脑或换 Windows 用户时需重新输入。读取或保存失败会单独提示，不影响手动连接及有效快照。需要移除已保存信息时，退出管理端后删除该文件及同目录的 `connection.json.bak` 和 `connection.json.corrupt-*`（若存在）。
 
 新增本地验证命令（使用合成数据，不访问公网 API）：
 
